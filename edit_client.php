@@ -1,5 +1,5 @@
 <html>
-<title>Данные по клиентам</title>
+<title> Данные по клиентам </title>
 <head>
 	<meta charset = "utf-8" />
 	<b>Редактирование данных клиента ID = <?php echo $_GET['id'];?></b>

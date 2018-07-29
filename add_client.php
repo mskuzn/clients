@@ -116,7 +116,7 @@ if (isset($_POST['to_main'])){
 
 	header("Location: http://$host$uri/");
 }
-
+ 
 ?>
 </body>
 </html>
