@@ -100,6 +100,15 @@
 
 include_once "Db_operations.php";
 include_once "conn_parameters.php";
+	
+
+if (isset($_POST['go_to_add_client'])){
+	$host  = $_SERVER['HTTP_HOST'];
+	$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
+	$extra = 'add_client.php';
+	header("Location: http://$host$uri/$extra");
+exit;
+}
 
 	
 if (isset($_POST['search'])){
@@ -160,15 +169,7 @@ try {
 	  </table>
 	
 
-<?php
-if (isset($_POST['go_to_add_client'])){
-	$host  = $_SERVER['HTTP_HOST'];
-	$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
-	$extra = 'add_client.php';
-	header("Location: http://$host$uri/$extra");
-exit;
-}
-?>
+
 </body>
 </html>
 
