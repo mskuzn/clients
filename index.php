@@ -30,7 +30,7 @@
 
 	
 	<form action="" method="post">
-		
+
 	   <tr>
 		   <td align="center"><input type="submit" value="      Найти  >>  " name="search"></td>
 		   <td>
@@ -98,11 +98,11 @@
 					</form>
 			<?php 
 
-include_once "Db_operations.php";
-include_once "conn_parameters.php";
-	
+include_once "Db_operations.php"; //подключение класса взаимодействия с  БД
+include_once "conn_parameters.php"; //подключение учётных данных для взамиодействия PHP и MySQL
 
-if (isset($_POST['go_to_add_client'])){
+
+if (isset($_POST['go_to_add_client'])){ // блок перехода к добавлению клиента
 	$host  = $_SERVER['HTTP_HOST'];
 	$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 	$extra = 'add_client.php';
@@ -111,7 +111,7 @@ exit;
 }
 
 	
-if (isset($_POST['search'])){
+if (isset($_POST['search'])){ // установки переменных фильтра для выборки по нажатию кнопки Найти
 	$id= $_POST['id'];
 	$familyname= $_POST['familyname'];
 	$name= $_POST['name'];
@@ -123,7 +123,7 @@ if (isset($_POST['search'])){
 	$phones= $_POST['phones'];	
 }
 
-$parametrs_arr = [
+$parametrs_arr = [ // взятие параметров из полей формы поиска клиентов
 	 'id'=>  $_POST['id']
 	,'familyname'=> $_POST['familyname']
 	,'name'=>  $_POST['name']
@@ -137,26 +137,25 @@ $parametrs_arr = [
 	
 	
 	
-$sql = "
+$sql = // формирование шаблона запроса на выборку
+"
 select id,familyname,name,fothername,DATE_FORMAT(birthday,'%d.%m.%Y') as birthday,case male when 'm' then 'мужской' when 'w' then 'женский' end  as male,DATE_FORMAT(created,'%d.%m.%Y') as created,DATE_FORMAT(modified,'%d.%m.%Y') as modified,phones from clients cli
 	left join (select client_id, GROUP_CONCAT(phone_number SEPARATOR '; ') as phones from phones group by client_id) pho 
 			on pho.client_id=cli.id
 	where  id like '%$id%' and coalesce(familyname, '') like '%$familyname%' and coalesce(name, '') like '%$name%' and coalesce(fothername, '') like '%$fothername%' 
 			and coalesce(DATE_FORMAT(birthday,'%d.%m.%Y'), '') like '%$birthday%' and coalesce(male, '') like '%$male%' and DATE_FORMAT(created,'%d.%m.%Y') like '%$created%' and DATE_FORMAT(modified,'%d.%m.%Y') like '%$modified%' and coalesce(phones, '') like '%$phones%' ; ";
 try {
-		$db= new Db_operations($servername,$username,$password,$dbname);
-		$db->execute("SET NAMES 'utf8'; SET CHARACTER SET 'utf8';SET SESSION collation_connection = 'utf8_general_ci';",$parametrs_arr);
-			foreach ($db->query($sql,$parametrs_arr) as $row) {
-
-
-
-				echo "<tr><td><a href=\"/edit_client.php?id=". $row['id'] . "\">Редактировать</a> </td>
+		$db= new Db_operations($servername,$username,$password,$dbname); //создаём объект подключения к БД
+		$db->execute("SET NAMES 'utf8'; SET CHARACTER SET 'utf8';SET SESSION collation_connection = 'utf8_general_ci';",$parametrs_arr); //установка кодировки соединения
+			foreach ($db->query($sql,$parametrs_arr) as $row) { //создание строк таблицы списка клиента 
+				// в первом поле ссылка на редактирование с параметром ID
+				echo "<tr><td><a href=\"/edit_client.php?id=". $row['id'] . "\">Редактировать</a> </td> 
 			<td>". $row['id'] . "</td><td>". $row['familyname'] . "</td><td>". $row['name'] . "</td><td>". $row['fothername'] . "</td><td>". $row['birthday'] . "</td><td>". $row['male'] . "</td><td>". $row['created'] . "</td><td>". $row['modified'] . "</td><td>". $row['phones'] . "</td>
 		</tr>" ;
 			}
 
 	}
-	catch (PDOException $e) {
+	catch (PDOException $e) { //поймать и показать ошибки PDO
 		echo "Faled: " . $e->getMessage();
 	}
 	

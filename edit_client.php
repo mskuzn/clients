@@ -6,10 +6,11 @@
 </head>
 <body>
 <?php
-	include_once "Db_operations.php";
-	include_once "conn_parameters.php";
-	$num_of_phones = htmlspecialchars($_POST['counter_phones']);
-	if (is_null($num_of_phones) ||  $num_of_phones<=0){$num_of_phones=1;}
+include_once "Db_operations.php"; //подключение класса взаимодействия с  БД
+include_once "conn_parameters.php"; //подключение учётных данных для взамиодействия PHP и MySQL
+	$num_of_phones = htmlspecialchars($_POST['counter_phones']); //число выводимых телефонов берём из полей формы (но в первый раз берётся из count(*) БД(описано ниже))
+	if (is_null($num_of_phones) ||  $num_of_phones<=0){$num_of_phones=1;} // устанавливаем значение числа телефонов, чтобы на странице всегда было как минимум одно поле ввода телефона
+//параметры из полей отправляем в переменные
 	$parametrs_arr_id = ['id'=>  $_GET['id']];
 	$parametrs_arr_update_data=['id'=>  $_GET['id']];
 	$parametrs_arr_update_data['name'] = $_POST['name'];	
@@ -19,15 +20,18 @@
 	$parametrs_arr_update_data['male'] = $_POST['male'];	
 
 	
-
-	$sql_phones= "select phone_number from phones where client_id = :id;";
+	//запрос на вывод номеров телефонов интересующего клиента
+	$sql_phones= "select phone_number from phones where client_id = :id;"; 
+	
+	//запрос на вывод данных клиента
 	$sql_clients = "
 		select id,familyname,name,fothername,DATE_FORMAT(birthday,'%d.%m.%Y') as birthday, male,DATE_FORMAT(created,'%d.%m.%Y') as created,DATE_FORMAT(modified,'%d.%m.%Y') as modified from clients where id= :id;";
 
+	//скрипт на удаление клиента	
 	$sql_delete_client="
 						DELETE FROM clients WHERE id=:id;
 						DELETE FROM phones WHERE client_id=:id;";
-	
+	//скрипт на изменение данных клиента в рамках транзакции
 	$sql_update_data="Start transaction;
 						LOCK TABLES clients.clients WRITE, clients.phones WRITE;
 						DELETE FROM phones WHERE client_id=:id; ";
@@ -48,7 +52,7 @@
 	
 
 	try {
-		$db= new Db_operations($servername,$username,$password,$dbname);
+		$db= new Db_operations($servername,$username,$password,$dbname); // создаём объект БД
 		$db->execute("SET NAMES 'utf8'; SET CHARACTER SET 'utf8'; SET SESSION collation_connection = 'utf8_general_ci';",$parametrs_arr_id);
 			foreach ($db->query($sql_clients,$parametrs_arr_id) as $row) { //цикл по одному элементу так проще записать)))))
 				$familyname= $row['familyname'];
@@ -61,11 +65,11 @@
 		}
 		$phones_arr =array();
 		foreach ($db->query($sql_phones,$parametrs_arr_id) as $row) {
-			array_push($phones_arr,$row['phone_number']);
+			array_push($phones_arr,$row['phone_number']);//добавляем все номера клиента из БД в массив
 		}
 			
-		if(isset($_POST['delete_client'])){$db->execute($sql_delete_client,$parametrs_arr_id);}
-		elseif(isset($_POST['save_client'])){$db->execute($sql_update_data,$parametrs_arr_update_data);}
+		if(isset($_POST['delete_client'])){$db->execute($sql_delete_client,$parametrs_arr_id);} // удаление клиента по нажатию соответствующей кнопки
+		elseif(isset($_POST['save_client'])){$db->execute($sql_update_data,$parametrs_arr_update_data);} // обновление данных клиента по нажатию кнопки "Сохранить"
 	}
 	catch (PDOException $e) {
 		echo "Faled: " . $e->getMessage();
@@ -103,14 +107,14 @@
 	
 	<?php
 			
-			$is_first_come = (  
+			$is_first_come = (  // проверяем, на первый запуск страницы (не была нажата ни одна кнопка)
 					!isset($_POST['add_phone'])
 				 && !isset($_POST['save_client']) 
 				 && !isset($_POST['rem_phone']) 
 				 && !isset($_POST['to_main']) 
 				 && !isset($_POST['delete_client']));
 			
-				function phones_get_value($n,$is_first,$values_arr)
+				function phones_get_value($n,$is_first,$values_arr) //получение телефонов из БД (если ещё не нажимали никакие кнопки)
 				{
 					if ($is_first){
 						$phone_value=$values_arr[$n-1];
@@ -121,13 +125,13 @@
 				}
 								
 
-				if (isset($_POST['add_phone'])){$num_of_phones++;}
-				elseif(isset($_POST['rem_phone']) && $num_of_phones>=1){$num_of_phones--; } 
-				//if (($_POST['rem_phone']) && $num_of_phones==2){$num_of_phones=1;}
+				if (isset($_POST['add_phone'])){$num_of_phones++;} // управление числом выводимых телефонов кнопками (увеличение)
+				elseif(isset($_POST['rem_phone']) && $num_of_phones>=1){$num_of_phones--; } // управление числом выводимых телефонов кнопками (Уменьшение)
 
-			if($is_first_come){$num_of_phones=count($phones_arr)+1;}
+
+			if($is_first_come){$num_of_phones=count($phones_arr)+1;} //костыль, чтобы корректно отображалось число полей
 					$i=1;
-				while ($i <= $num_of_phones-1) {
+				while ($i <= $num_of_phones-1) { // создаём нужное число полей ввода телефонов
 					echo "<p> Телефон №" . $i . " <input type=\"text\" name=\"phone" . $i .  "\" value=\"" . phones_get_value($i,$is_first_come,$phones_arr) . "\" placeholder=\"Вводите только цифры\" ></p> ";
 					$i++;
 				} 
@@ -143,7 +147,7 @@
 		<input  type="hidden" name="counter_phones" value="<?php echo $num_of_phones;?>">
 	
 		<?php 
-			  if (isset($_POST['to_main']) || isset($_POST['delete_client']) || isset($_POST['save_client'])){
+			  if (isset($_POST['to_main']) || isset($_POST['delete_client']) || isset($_POST['save_client'])){ // после удаления клиента возвращаемся на главную
 				$host  = $_SERVER['HTTP_HOST'];
 				$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
 				header("Location: http://$host$uri/");

@@ -57,16 +57,17 @@
 </form>
 
 <?php
-include_once "Db_operations.php";
-include_once "conn_parameters.php";
+include_once "Db_operations.php"; //подключение класса взаимодействия с  БД
+include_once "conn_parameters.php"; //подключение учётных данных для взамиодействия PHP и MySQL
 
-$parametrs_arr = ['name'=>  $_POST['name']
+$parametrs_arr = ['name'=>  $_POST['name'] // установки переменных вставки данных в БД из формы
 	,'familyname'=> $_POST['familyname']
 	,'fothername'=> $_POST['fothername']
 	,'birthday'=> $_POST['birthday']
 	,'male'=> $_POST['male']];
 $parametrs_arr_for_check = $parametrs_arr;
-$sql ="
+$sql =//шаблон запроса на вставку данных в БД
+"
 	SET NAMES 'utf8';
 	SET CHARACTER SET 'utf8';
 	SET SESSION collation_connection = 'utf8_general_ci';
@@ -86,20 +87,20 @@ for ($i = 1; $i <= $num_of_phones+1; $i++) { //набиваем запрос н�
 	}
 
 $sql .= "UNLOCK TABLES;
-	commit; ";
-if (isset($_POST['add_client'])){
+	commit; ";// завершаем транзакцию
+if (isset($_POST['add_client'])){ //выполняем добавление клиента по нажатию соответствующей кнопки
 	try {
-		$db= new Db_operations($servername,$username,$password,$dbname);
+		$db= new Db_operations($servername,$username,$password,$dbname); // создаём объект БД
 
-		$db-> execute($sql,$parametrs_arr);
+		$db-> execute($sql,$parametrs_arr); //выполняем вставку данных в БД
 
 		$sql_get_last_id = "SELECT id as last_id FROM clients 
 			where name = :name and familyname = :familyname and fothername = :fothername and birthday = STR_TO_DATE(:birthday, '%d.%m.%Y') and male = :male;";
-			foreach ($db->query($sql_get_last_id,$parametrs_arr_for_check) as $row) {
+			foreach ($db->query($sql_get_last_id,$parametrs_arr_for_check) as $row) {//возвращаем ID созданного клиента
 				$last_id= $row['last_id'];
 			}
 
-				echo "Клиент добавлен, присвоен ID: " . $last_id ;
+				echo "Клиент добавлен, присвоен ID: " . $last_id ; //выводим ID нового клиента
 
 
 	}
@@ -109,7 +110,7 @@ if (isset($_POST['add_client'])){
 }
 	
 	
-if (isset($_POST['to_main'])){
+if (isset($_POST['to_main'])){//переход на главную страницу по нажатию кнопки
 	
 	$host  = $_SERVER['HTTP_HOST'];
 	$uri   = rtrim(dirname($_SERVER['PHP_SELF']), '/\\');
